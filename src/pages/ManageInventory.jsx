@@ -136,11 +136,34 @@ const ManageInventory = () => {
 
   const handleFileChange = (e, type) => {
     const files = Array.from(e.target.files);
-    if (type === 'images') {
-      setImages(prev => [...prev, ...files]);
-    } else {
-      setDocuments(prev => [...prev, ...files]);
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    const validFiles = [];
+    const invalidFiles = [];
+
+    files.forEach(file => {
+      if (file.size > MAX_SIZE) {
+        invalidFiles.push(file.name);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      Swal.fire({
+        title: 'Archivos muy grandes',
+        text: `Los siguientes archivos superan el límite de 10MB: ${invalidFiles.join(', ')}`,
+        icon: 'warning',
+        confirmButtonColor: '#4f46e5'
+      });
     }
+
+    if (type === 'images') {
+      setImages(prev => [...prev, ...validFiles]);
+    } else {
+      setDocuments(prev => [...prev, ...validFiles]);
+    }
+    
+    e.target.value = '';
   };
 
   const removeFile = (index, type) => {
@@ -157,6 +180,16 @@ const ManageInventory = () => {
     } else {
       setExistingDocuments(prev => prev.filter(name => name !== fileName));
     }
+  };
+
+  const getDisplayFileName = (urlOrPath) => {
+    if (!urlOrPath) return '';
+    const fileName = urlOrPath.split('/').pop();
+    const parts = fileName.split('_');
+    if (parts.length >= 3) {
+      return parts.slice(2).join('_');
+    }
+    return fileName;
   };
 
   const resetForm = () => {
@@ -182,8 +215,8 @@ const ManageInventory = () => {
         ...formData,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
-        pathImages: existingImages,
-        pathDocuments: existingDocuments
+        imageUrls: existingImages,
+        documentUrls: existingDocuments
       };
 
       if (editingId) {
@@ -222,8 +255,8 @@ const ManageInventory = () => {
       stock: product.stock.toString(),
       category: product.category
     });
-    setExistingImages(product.pathImages || []);
-    setExistingDocuments(product.pathDocuments || []);
+    setExistingImages(product.imageUrls || []);
+    setExistingDocuments(product.documentUrls || []);
     setImages([]);
     setDocuments([]);
     setActiveTab('add');
@@ -494,7 +527,9 @@ const ManageInventory = () => {
                           <div key={`existing-doc-${idx}`} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-sm group">
                             <div className="flex items-center gap-3">
                               <FileText size={16} className="text-red-400" />
-                              <span className="text-xs font-medium text-slate-600 truncate max-w-[200px]">{doc}</span>
+                              <span className="text-xs font-medium text-slate-600 truncate max-w-[200px]" title={getDisplayFileName(doc)}>
+                                {getDisplayFileName(doc)}
+                              </span>
                             </div>
                             <button 
                               type="button"
@@ -612,7 +647,7 @@ const ManageInventory = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 bg-white border border-slate-100 rounded-sm overflow-hidden flex-shrink-0">
-                                <ProductImage fileName={product.pathImages?.[0]} alt={product.name} />
+                                <ProductImage fileName={product.imageUrls?.[0]} alt={product.name} />
                               </div>
                               <span className="font-bold text-slate-900 text-sm">{product.name}</span>
                             </div>

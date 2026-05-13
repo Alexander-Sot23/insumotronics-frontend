@@ -171,7 +171,7 @@ const Inventory = () => {
                   {/* Product Image - Shorter height with padding to make image look smaller */}
                   <div className="aspect-[4/3] bg-white relative overflow-hidden flex items-center justify-center border-b border-slate-50 p-2">
                     <ProductImage 
-                      fileName={product.pathImages?.[0]} 
+                      fileName={product.imageUrls?.[0]} 
                       alt={product.name} 
                     />
                     

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: `http://${window.location.hostname}:8080`,
+  baseURL: import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8080`,
   withCredentials: false, // Desactivado temporalmente para pruebas
   headers: {
     'Content-Type': 'application/json',

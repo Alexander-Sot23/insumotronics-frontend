@@ -19,12 +19,10 @@ const ProductImage = ({ fileName, alt }) => {
       try {
         setLoading(true);
         const response = await apiClient.get(`/api/student/files/view-file`, {
-          params: { fileName },
-          responseType: 'blob'
+          params: { fileName }
         });
 
-        objectUrl = URL.createObjectURL(response.data);
-        setImageUrl(objectUrl);
+        setImageUrl(response.data);
         setError(false);
       } catch (err) {
         console.error('Error cargando imagen mediante API:', fileName, err);

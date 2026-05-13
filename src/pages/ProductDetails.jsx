@@ -46,18 +46,44 @@ const ProductDetails = () => {
 
   const handleDownload = async (fileName) => {
     try {
-      const response = await apiClient.get(`/api/student/files/view-file`, {
+      const response = await apiClient.get(`/api/student/files/download-file`, {
         params: { fileName },
         responseType: 'blob'
       });
       
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', fileName);
+      
+      // Intentar obtener el nombre del archivo del header content-disposition si es posible
+      const contentDisposition = response.headers['content-disposition'];
+      let downloadName = fileName;
+      
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (fileNameMatch?.[1]) downloadName = fileNameMatch[1];
+      } else {
+        // Fallback: extraer el nombre desde la URL porque CORS bloquea content-disposition
+        const lastSlashIndex = fileName.lastIndexOf('/');
+        const nameWithPrefix = lastSlashIndex !== -1 ? fileName.substring(lastSlashIndex + 1) : fileName;
+        
+        // Quitar el prefijo de timestamp_uid_ que agrega Supabase
+        const parts = nameWithPrefix.split('_');
+        if (parts.length >= 3) {
+          downloadName = parts.slice(2).join('_');
+        } else {
+          downloadName = nameWithPrefix;
+        }
+      }
+
+      link.setAttribute('download', downloadName);
       document.body.appendChild(link);
       link.click();
+      
+      // Limpieza
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Error downloading file:', err);
     }
@@ -121,7 +147,7 @@ const ProductDetails = () => {
             <div className="p-8 lg:p-12 bg-slate-50/80 flex flex-col gap-6">
               <div className="aspect-square bg-white border border-slate-50 rounded-sm overflow-hidden relative group">
                 <ProductImage 
-                  fileName={product.pathImages?.[activeImage]} 
+                  fileName={product.imageUrls?.[activeImage]} 
                   alt={product.name} 
                 />
                 <div className={`absolute top-4 right-4 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg ${
@@ -132,9 +158,9 @@ const ProductDetails = () => {
               </div>
 
               {/* Thumbnails */}
-              {product.pathImages && product.pathImages.length > 1 && (
+              {product.imageUrls && product.imageUrls.length > 1 && (
                 <div className="grid grid-cols-4 gap-4">
-                  {product.pathImages.map((img, idx) => (
+                  {product.imageUrls.map((img, idx) => (
                     <button 
                       key={idx}
                       onClick={() => setActiveImage(idx)}
@@ -177,11 +203,11 @@ const ProductDetails = () => {
                   </div>
 
                   {/* Documents Section */}
-                  {product.pathDocuments && product.pathDocuments.length > 0 && (
+                  {product.documentUrls && product.documentUrls.length > 0 && (
                     <div className="space-y-3">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Documentación Técnica</p>
                       <div className="grid grid-cols-1 gap-2">
-                        {product.pathDocuments.map((doc, idx) => (
+                        {product.documentUrls.map((doc, idx) => (
                           <button 
                             key={idx}
                             onClick={() => handleDownload(doc)}
@@ -189,8 +215,8 @@ const ProductDetails = () => {
                           >
                             <div className="flex items-center gap-3">
                               <FileText className="text-red-400" size={20} />
-                              <span className="text-xs font-bold text-slate-700 truncate max-w-[200px]">
-                                {doc.split('_').slice(1).join('_') || doc}
+                              <span className="text-xs font-bold text-slate-700 truncate max-w-[200px]" title={doc.split('/').pop().split('_').length >= 3 ? doc.split('/').pop().split('_').slice(2).join('_') : doc.split('/').pop()}>
+                                {doc.split('/').pop().split('_').length >= 3 ? doc.split('/').pop().split('_').slice(2).join('_') : doc.split('/').pop()}
                               </span>
                             </div>
                             <Download size={16} className="text-slate-300 group-hover:text-indigo-600 transition-colors" />

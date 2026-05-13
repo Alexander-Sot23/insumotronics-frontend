@@ -51,6 +51,7 @@ const ManageInventory = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
@@ -204,6 +205,7 @@ const ManageInventory = () => {
     setExistingImages([]);
     setExistingDocuments([]);
     setEditingId(null);
+    setUploadProgress(0);
   };
 
   const handleSubmit = async (e) => {
@@ -219,15 +221,22 @@ const ManageInventory = () => {
         documentUrls: existingDocuments
       };
 
+      const handleProgress = (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
+      };
+
       if (editingId) {
-        await inventoryService.updateProduct(editingId, productData, images, documents);
+        await inventoryService.updateProduct(editingId, productData, images, documents, handleProgress);
         Toast.fire({
           icon: 'success',
           title: 'Producto actualizado correctamente'
         });
         setActiveTab('list');
       } else {
-        await inventoryService.createProduct(productData, images, documents);
+        await inventoryService.createProduct(productData, images, documents, handleProgress);
         Toast.fire({
           icon: 'success',
           title: 'Producto creado correctamente'
@@ -244,6 +253,7 @@ const ManageInventory = () => {
       });
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -563,18 +573,36 @@ const ManageInventory = () => {
 
                 {/* Submit Actions */}
                 <div className="lg:col-span-2 pt-8 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
-                  <button 
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-grow flex items-center justify-center gap-3 py-4 bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-sm hover:bg-indigo-600 disabled:bg-slate-300 transition-all shadow-xl"
-                  >
-                    {submitting ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : (
-                      <Save size={18} />
-                    )}
-                    {editingId ? 'Actualizar Componente' : 'Publicar Componente'}
-                  </button>
+                  <div className="flex-grow flex flex-col gap-2">
+                    <button 
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full flex items-center justify-center gap-3 py-4 bg-slate-900 text-white text-xs font-black uppercase tracking-[0.2em] rounded-sm hover:bg-indigo-600 disabled:bg-slate-300 transition-all shadow-xl relative overflow-hidden"
+                    >
+                      {submitting && uploadProgress > 0 && uploadProgress < 100 && (
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 bg-indigo-600/30 transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      )}
+                      
+                      <div className="relative z-10 flex items-center gap-3">
+                        {submitting ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} />
+                            {uploadProgress > 0 && uploadProgress < 100 
+                              ? `Subiendo... ${uploadProgress}%` 
+                              : (uploadProgress === 100 ? 'Procesando...' : (editingId ? 'Actualizando...' : 'Publicando...'))}
+                          </>
+                        ) : (
+                          <>
+                            <Save size={18} />
+                            {editingId ? 'Actualizar Componente' : 'Publicar Componente'}
+                          </>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                   {editingId && (
                     <>
                       <button 

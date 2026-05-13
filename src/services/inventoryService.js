@@ -64,7 +64,7 @@ const inventoryService = {
     return response.data;
   },
 
-  createProduct: async (productData, images, documents) => {
+  createProduct: async (productData, images, documents, onUploadProgress) => {
     const formData = new FormData();
     formData.append('sendData', JSON.stringify(productData));
     
@@ -84,11 +84,12 @@ const inventoryService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      onUploadProgress,
     });
     return response.data;
   },
 
-  updateProduct: async (id, productData, images, documents) => {
+  updateProduct: async (id, productData, images, documents, onUploadProgress) => {
     const formData = new FormData();
     formData.append('sendData', JSON.stringify(productData));
     
@@ -109,6 +110,7 @@ const inventoryService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      onUploadProgress,
     });
     return response.data;
   },

@@ -26,7 +26,8 @@ const Login = () => {
       const response = await apiClient.post('/api/login', formData, {
         headers: {
           'Content-Type': undefined
-        }
+        },
+        withCredentials: true
       });
 
       if (response.data) {
@@ -35,9 +36,9 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      const errorMsg = err.response?.data?.error || 
-                       err.response?.data?.message || 
-                       'Credenciales inválidas o error de conexión.';
+      const errorMsg = err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Credenciales inválidas o error de conexión.';
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -49,9 +50,9 @@ const Login = () => {
       <div className="w-full max-w-[400px] flex flex-col items-center bg-white p-10 rounded-2xl shadow-sm border border-slate-100">
         {/* Logo Centered */}
         <div className="mb-8">
-          <img 
-            src={logo} 
-            alt="CompSTOCK Logo" 
+          <img
+            src={logo}
+            alt="CompSTOCK Logo"
             className="w-32 md:w-40 transition-transform duration-700 hover:scale-105"
           />
         </div>

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:8080`,
-  withCredentials: false, // Desactivado temporalmente para pruebas
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,15 +11,7 @@ const apiClient = axios.create({
 // Interceptor para peticiones: añade el token JWT si existe
 apiClient.interceptors.request.use(
   (config) => {
-    // No añadir token para la ruta de login
-    if (config.url && config.url.includes('/api/login')) {
-      return config;
-    }
-
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // El token se envía automáticamente en la cookie HttpOnly
     
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
@@ -42,7 +34,6 @@ apiClient.interceptors.response.use(
       // Solo limpiar y redirigir si NO es una petición de login
       if (!isLoginRequest) {
         console.warn('Sesión expirada o acceso denegado. Redirigiendo...');
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
         
         if (window.location.pathname !== '/login') {

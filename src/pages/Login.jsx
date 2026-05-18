@@ -29,7 +29,7 @@ const Login = () => {
         }
       });
 
-      if (response.data && response.data.token) {
+      if (response.data) {
         login(response.data);
         navigate('/home');
       }

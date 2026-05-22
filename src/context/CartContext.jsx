@@ -36,7 +36,6 @@ export const CartProvider = ({ children }) => {
 
       if (currentCart && currentCart.id) {
         const itemsData = await itemCartService.getByCartId(currentCart.id, 0, 100);
-        console.log('[CartContext] Raw items from API:', JSON.stringify(itemsData?.content?.[0], null, 2));
         if (itemsData && itemsData.content) {
           setItems(itemsData.content);
         } else {
@@ -65,7 +64,7 @@ export const CartProvider = ({ children }) => {
       if (!currentCartId) return { success: false, error: 'No se pudo obtener el carrito activo' };
 
       // Verificar si el producto ya está en el carrito
-      const existingItem = items.find(item => item.product?.id === productId);
+      const existingItem = items.find(item => (item.productId ?? item.product?.id) === productId);
 
       if (existingItem) {
         // Actualizar la cantidad en lugar de crear uno nuevo para evitar errores de restricción única
@@ -122,11 +121,14 @@ export const CartProvider = ({ children }) => {
 
   const safeItems = Array.isArray(items) ? items : [];
   const totalItems = safeItems.reduce((total, item) => total + (item?.quantity || 0), 0);
-  const totalPrice = safeItems.reduce((total, item) => {
-    // The API may return the price field as 'price' or 'unitPrice'
-    const unitPrice = item?.product?.price ?? item?.product?.unitPrice ?? 0;
+  const calculatedTotalPrice = safeItems.reduce((total, item) => {
+    const subtotal = item?.subtotal;
+    if (typeof subtotal === 'number') return total + subtotal;
+
+    const unitPrice = item?.productPrice ?? item?.product?.price ?? item?.product?.unitPrice ?? 0;
     return total + (unitPrice * (item?.quantity || 0));
   }, 0);
+  const totalPrice = typeof cart?.totalPrice === 'number' ? cart.totalPrice : calculatedTotalPrice;
 
   const value = {
     cart,

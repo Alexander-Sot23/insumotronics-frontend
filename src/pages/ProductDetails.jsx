@@ -8,7 +8,9 @@ import {
   ChevronRight,
   Info,
   Download,
-  Pencil
+  Pencil,
+  Plus,
+  Minus
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +31,7 @@ const ProductDetails = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -36,6 +39,7 @@ const ProductDetails = () => {
         setLoading(true);
         const data = await inventoryService.getProductById(user?.role, id);
         setProduct(data);
+        setSelectedQuantity(1);
       } catch (err) {
         console.error('Error fetching product details:', err);
         setError('No se pudo cargar la información del producto.');
@@ -51,15 +55,22 @@ const ProductDetails = () => {
     if (!product || product.stock <= 0) return;
     
     setActionLoading(true);
-    const result = await addToCart(product.id, 1);
+    const result = await addToCart(product.id, selectedQuantity);
     if (result && result.success) {
-      // Reducir stock local visualmente
-      setProduct(prev => ({ ...prev, stock: prev.stock - 1 }));
+      alert(`${selectedQuantity} pieza(s) agregada(s) al carrito.`);
     } else {
       const errorMsg = result?.error || 'Hubo un error al agregar el producto al carrito.';
       alert(`Error: ${errorMsg}`);
     }
     setActionLoading(false);
+  };
+
+  const updateSelectedQuantity = (change) => {
+    setSelectedQuantity((current) => {
+      const nextQuantity = current + change;
+      if (!product?.stock) return 1;
+      return Math.min(Math.max(nextQuantity, 1), product.stock);
+    });
   };
 
   const handleDownload = async (fileName) => {
@@ -246,7 +257,37 @@ const ProductDetails = () => {
                 </div>
               </div>
 
-              <div className="mt-12 flex flex-col sm:flex-row gap-4">
+              <div className="mt-12 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-center border border-slate-200 bg-white rounded-sm w-fit">
+                    <button
+                      type="button"
+                      onClick={() => updateSelectedQuantity(-1)}
+                      disabled={selectedQuantity <= 1 || actionLoading || product.stock <= 0}
+                      className="p-3 text-slate-500 hover:text-indigo-600 disabled:opacity-40 transition-colors"
+                      title="Restar pieza"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="w-14 text-center text-sm font-bold text-slate-900">
+                      {selectedQuantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateSelectedQuantity(1)}
+                      disabled={selectedQuantity >= product.stock || actionLoading || product.stock <= 0}
+                      className="p-3 text-slate-500 hover:text-indigo-600 disabled:opacity-40 transition-colors"
+                      title="Agregar pieza"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Piezas a reservar
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={handleAddToCart}
                   className={`flex-grow flex items-center justify-center gap-3 py-4 text-xs font-black uppercase tracking-[0.2em] rounded-sm transition-all shadow-lg ${
@@ -275,6 +316,7 @@ const ProductDetails = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest">Editar</span>
                   </button>
                 )}
+                </div>
               </div>
             </div>
           </div>

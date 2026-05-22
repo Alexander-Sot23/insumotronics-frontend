@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Inventory from './pages/Inventory'
@@ -22,11 +23,13 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/inventory" element={<Inventory />} />
-          <Route path="/manage-inventory" element={<ManageInventory />} />
-          <Route path="/manage-orders" element={<ManageOrders />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/manage-inventory" element={<ManageInventory />} />
+            <Route path="/manage-orders" element={<ManageOrders />} />
+          </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/home" replace />} />

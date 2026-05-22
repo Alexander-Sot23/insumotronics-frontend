@@ -1,11 +1,13 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, ShoppingCart, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import logo from '../assets/CompStock-logo-01.png';
 import { useState } from 'react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { totalItems, totalPrice } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -64,13 +66,18 @@ const Navbar = () => {
             <User size={20} strokeWidth={1.5} />
           </button>
 
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <span className="text-[11px] font-medium text-slate-600 tracking-wider">$0.00</span>
+          <div 
+            className="flex items-center space-x-3 group cursor-pointer"
+            onClick={() => navigate('/cart')}
+          >
+            <span className="text-[11px] font-medium text-slate-600 tracking-wider uppercase">${(totalPrice || 0).toFixed(2)}</span>
             <div className="relative">
               <ShoppingCart size={20} strokeWidth={1.5} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
-              <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                0
-              </span>
+              {(totalItems || 0) > 0 && (
+                <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  {totalItems}
+                </span>
+              )}
             </div>
           </div>
 
@@ -85,7 +92,7 @@ const Navbar = () => {
 
         {/* Mobile Menu Button */}
         <div className="lg:hidden flex items-center space-x-4">
-          <button className="text-slate-400">
+          <button onClick={() => navigate('/cart')} className="text-slate-400 hover:text-indigo-600 transition-colors">
             <ShoppingCart size={20} strokeWidth={1.5} />
           </button>
           <button 

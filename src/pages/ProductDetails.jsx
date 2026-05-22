@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import inventoryService from '../services/inventoryService';
 import ProductImage from '../components/ProductImage';
 import apiClient from '../api/client';
@@ -19,11 +20,13 @@ import apiClient from '../api/client';
 const ProductDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
 
@@ -43,6 +46,21 @@ const ProductDetails = () => {
 
     fetchProduct();
   }, [id, user]);
+
+  const handleAddToCart = async () => {
+    if (!product || product.stock <= 0) return;
+    
+    setActionLoading(true);
+    const result = await addToCart(product.id, 1);
+    if (result && result.success) {
+      // Reducir stock local visualmente
+      setProduct(prev => ({ ...prev, stock: prev.stock - 1 }));
+    } else {
+      const errorMsg = result?.error || 'Hubo un error al agregar el producto al carrito.';
+      alert(`Error: ${errorMsg}`);
+    }
+    setActionLoading(false);
+  };
 
   const handleDownload = async (fileName) => {
     try {
@@ -230,14 +248,15 @@ const ProductDetails = () => {
 
               <div className="mt-12 flex flex-col sm:flex-row gap-4">
                 <button 
+                  onClick={handleAddToCart}
                   className={`flex-grow flex items-center justify-center gap-3 py-4 text-xs font-black uppercase tracking-[0.2em] rounded-sm transition-all shadow-lg ${
                     product.stock > 0 
                     ? 'bg-slate-900 text-white hover:bg-indigo-600' 
                     : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }`}
-                  disabled={product.stock <= 0}
+                  disabled={product.stock <= 0 || actionLoading}
                 >
-                  <ShoppingCart size={18} /> Reservar Ahora
+                  <ShoppingCart size={18} /> {actionLoading ? 'Agregando...' : 'Reservar Ahora'}
                 </button>
                 <button 
                   onClick={() => navigate('/inventory')}

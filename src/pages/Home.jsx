@@ -20,13 +20,13 @@ const Home = () => {
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
   useEffect(() => {
-    if (isAdmin || user?.id) {
+    if (isAdmin || user?.id || user?.userId) {
       fetchData();
     }
-  }, [isAdmin, user?.id]);
+  }, [isAdmin, user?.id, user?.userId]);
 
   const fetchData = async () => {
-    if (!isAdmin && !user?.id) return;
+    if (!isAdmin && !(user?.id || user?.userId)) return;
     
     try {
       setLoading(true);
@@ -51,8 +51,8 @@ const Home = () => {
         // Carga para ESTUDIANTE / PROFESOR (Personal + Global)
         const [invData, studentStats, activeReserves] = await Promise.all([
           inventoryService.getAllProducts(user?.role, 0, 1),
-          inventoryService.getStudentStats(user?.id),
-          inventoryService.getActiveReserves(user?.id)
+          inventoryService.getStudentStats(user?.id || user?.userId),
+          inventoryService.getActiveReserves(user?.id || user?.userId)
         ]);
 
         setStats({

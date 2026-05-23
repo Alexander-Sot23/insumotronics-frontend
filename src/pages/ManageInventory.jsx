@@ -748,7 +748,7 @@ const ManageInventory = () => {
 
       <footer className="max-w-7xl mx-auto px-6 py-12 text-center">
         <p className="text-slate-300 text-[10px] font-medium uppercase tracking-[0.3em]">
-          CompSTOCK Admin Panel &copy; {new Date().getFullYear()}
+          Insumotronics Admin Panel &copy; {new Date().getFullYear()}
         </p>
       </footer>
     </div>

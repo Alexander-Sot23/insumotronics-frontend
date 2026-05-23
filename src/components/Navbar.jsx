@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { User, ShoppingCart, LogOut, Menu, X, ShieldCheck, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import logo from '../assets/CompStock-logo-01.png';
+import logo from '../assets/insu-logo-03.png';
 import { useState } from 'react';
 
 const Navbar = () => {
@@ -42,7 +42,7 @@ const Navbar = () => {
         
         {/* Left: Logo */}
         <div className="flex items-center cursor-pointer" onClick={() => navigate('/home')}>
-          <img src={logo} alt="CompSTOCK" className="h-8 md:h-10" />
+          <img src={logo} alt="Insumotronics" className="h-8 md:h-10" />
         </div>
 
         {/* Center: Navigation Options (Desktop) */}

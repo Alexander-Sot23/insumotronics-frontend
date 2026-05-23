@@ -270,7 +270,7 @@ const Profile = () => {
 
       <footer className="max-w-5xl mx-auto px-6 py-12 text-center">
         <p className="text-slate-300 text-[10px] font-medium uppercase tracking-[0.4em]">
-          Plataforma de Gestión CompSTOCK • 2026
+          Plataforma de Gestión Insumotronics • 2026
         </p>
       </footer>
     </div>
@@ -278,3 +278,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

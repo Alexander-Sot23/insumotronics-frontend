@@ -161,7 +161,7 @@ const Home = () => {
               Bienvenido, {user?.name || 'Alexander'}
             </h2>
             <p className="text-slate-400 font-light text-lg leading-relaxed max-w-xl">
-              Has ingresado al panel de control de <span className="text-slate-800 font-medium">CompSTOCK</span>. 
+              Has ingresado al panel de control de <span className="text-slate-800 font-medium">Insumotronics</span>. 
               {isAdmin 
                 ? 'Monitorea el estado del inventario y gestiona las solicitudes de los estudiantes en tiempo real.'
                 : 'Tu próximo gran proyecto comienza aquí. Explora nuestro catálogo de componentes y solicita los materiales necesarios para dar vida a tus circuitos e ideas.'}

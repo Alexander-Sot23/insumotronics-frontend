@@ -21,10 +21,10 @@ import apiClient from '../api/client';
 
 const ProductDetails = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { isAdminView, effectiveRole } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
-  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const isAdmin = isAdminView;
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,7 @@ const ProductDetails = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const data = await inventoryService.getProductById(user?.role, id);
+        const data = await inventoryService.getProductById(effectiveRole, id);
         setProduct(data);
         setSelectedQuantity(1);
       } catch (err) {
@@ -49,7 +49,7 @@ const ProductDetails = () => {
     };
 
     fetchProduct();
-  }, [id, user]);
+  }, [id, effectiveRole]);
 
   const handleAddToCart = async () => {
     if (!product || product.stock <= 0) return;

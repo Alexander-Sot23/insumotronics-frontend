@@ -2,10 +2,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const AdminRoute = () => {
-  const { user, loading } = useAuth();
-  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const { isAdmin, isAdminView, loading } = useAuth();
 
-  if (!loading && !isAdmin) {
+  if (!loading && (!isAdmin || !isAdminView)) {
     return <Navigate to="/home" replace />;
   }
 

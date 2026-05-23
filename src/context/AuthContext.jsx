@@ -2,10 +2,18 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../api/client';
 
 const AuthContext = createContext();
+const ADMIN_VIEW_KEY = 'adminViewMode';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [adminViewMode, setAdminViewMode] = useState(() => {
+    return localStorage.getItem(ADMIN_VIEW_KEY) || 'admin';
+  });
+
+  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const isAdminView = isAdmin && adminViewMode === 'admin';
+  const effectiveRole = isAdminView ? 'ADMIN' : (user?.role?.toUpperCase() === 'ADMIN' ? 'STUDENT' : user?.role);
 
   useEffect(() => {
     const verifySession = async () => {
@@ -34,6 +42,20 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    if (userData?.role?.toUpperCase() !== 'ADMIN') {
+      setAdminViewMode('student');
+      localStorage.setItem(ADMIN_VIEW_KEY, 'student');
+    }
+  };
+
+  const toggleAdminViewMode = () => {
+    if (!isAdmin) return;
+
+    setAdminViewMode((currentMode) => {
+      const nextMode = currentMode === 'admin' ? 'student' : 'admin';
+      localStorage.setItem(ADMIN_VIEW_KEY, nextMode);
+      return nextMode;
+    });
   };
 
   const logout = async () => {
@@ -44,11 +66,25 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       localStorage.removeItem('user');
+      localStorage.removeItem(ADMIN_VIEW_KEY);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        isAuthenticated: !!user,
+        loading,
+        isAdmin,
+        isAdminView,
+        adminViewMode,
+        effectiveRole,
+        toggleAdminViewMode
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -7,7 +7,7 @@ import inventoryService from '../services/inventoryService';
 import banner from '../assets/CUVALLES_banner.jpg';
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, isAdminView, effectiveRole } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalProducts: 0,
@@ -17,13 +17,13 @@ const Home = () => {
   const [recentReserves, setRecentReserves] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+  const isAdmin = isAdminView;
 
   useEffect(() => {
     if (isAdmin || user?.id || user?.userId) {
       fetchData();
     }
-  }, [isAdmin, user?.id, user?.userId]);
+  }, [isAdmin, effectiveRole, user?.id, user?.userId]);
 
   const fetchData = async () => {
     if (!isAdmin && !(user?.id || user?.userId)) return;
@@ -50,7 +50,7 @@ const Home = () => {
       } else {
         // Carga para ESTUDIANTE / PROFESOR (Personal + Global)
         const [invData, studentStats, activeReserves] = await Promise.all([
-          inventoryService.getAllProducts(user?.role, 0, 1),
+          inventoryService.getAllProducts(effectiveRole, 0, 1),
           inventoryService.getStudentStats(user?.id || user?.userId),
           inventoryService.getActiveReserves(user?.id || user?.userId)
         ]);

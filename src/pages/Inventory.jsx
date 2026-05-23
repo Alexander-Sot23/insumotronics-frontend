@@ -7,7 +7,7 @@ import inventoryService from '../services/inventoryService';
 import ProductImage from '../components/ProductImage';
 
 const Inventory = () => {
-  const { user } = useAuth();
+  const { effectiveRole } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ const Inventory = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [user, page, searchTerm, selectedCategory]);
+  }, [effectiveRole, page, searchTerm, selectedCategory]);
 
   const fetchProducts = async () => {
     try {
@@ -35,9 +35,9 @@ const Inventory = () => {
       let data;
       
       if (searchTerm.trim()) {
-        data = await inventoryService.searchByName(user?.role, searchTerm, page, 15);
+        data = await inventoryService.searchByName(effectiveRole, searchTerm, page, 15);
       } else {
-        data = await inventoryService.getAllProducts(user?.role, page, 15);
+        data = await inventoryService.getAllProducts(effectiveRole, page, 15);
       }
       
       // Manejo de la respuesta Page de Spring o lista/objeto único

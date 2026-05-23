@@ -2,9 +2,9 @@ import apiClient from '../api/client';
 
 const reserveService = {
   // Admin methods
-  getAll: async (page = 0, size = 15, sort = 'creationDate') => {
+  getAll: async (page = 0, size = 15, sort = 'creationDate', sinceHours) => {
     const response = await apiClient.get('/api/admin/reserve', {
-      params: { page, size, sort }
+      params: { page, size, sort, sinceHours }
     });
     return response.data;
   },

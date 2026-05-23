@@ -36,9 +36,9 @@ const inventoryService = {
     return response.data;
   },
 
-  getRecentReserves: async (page = 0, size = 5) => {
+  getRecentReserves: async (page = 0, size = 5, sinceHours = 24) => {
     const response = await apiClient.get('/api/admin/reserve', {
-      params: { page, size, sort: 'creationDate' }
+      params: { page, size, sort: 'creationDate', sinceHours }
     });
     return response.data;
   },

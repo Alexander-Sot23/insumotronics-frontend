@@ -6,6 +6,14 @@ import Navbar from '../components/Navbar';
 import inventoryService from '../services/inventoryService';
 import banner from '../assets/CUVALLES_banner.jpg';
 
+const activityFilters = [
+  { label: '1 hora', hours: 1 },
+  { label: '4 horas', hours: 4 },
+  { label: '12 horas', hours: 12 },
+  { label: '1 dia', hours: 24 },
+  { label: '1 semana', hours: 168 }
+];
+
 const Home = () => {
   const { user, isAdminView, effectiveRole } = useAuth();
   const navigate = useNavigate();
@@ -15,6 +23,10 @@ const Home = () => {
     readyToPickUp: 0 // Nuevo para alumnos
   });
   const [recentReserves, setRecentReserves] = useState([]);
+  const [activityPage, setActivityPage] = useState(0);
+  const [activityTotalPages, setActivityTotalPages] = useState(0);
+  const [activityTotalElements, setActivityTotalElements] = useState(0);
+  const [activityFilterHours, setActivityFilterHours] = useState(24);
   const [loading, setLoading] = useState(true);
 
   const isAdmin = isAdminView;
@@ -23,7 +35,7 @@ const Home = () => {
     if (isAdmin || user?.id || user?.userId) {
       fetchData();
     }
-  }, [isAdmin, effectiveRole, user?.id, user?.userId]);
+  }, [isAdmin, effectiveRole, user?.id, user?.userId, activityPage, activityFilterHours]);
 
   const fetchData = async () => {
     if (!isAdmin && !(user?.id || user?.userId)) return;
@@ -35,7 +47,7 @@ const Home = () => {
         // Carga para ADMIN (Global)
         const [statsData, reservesData] = await Promise.all([
           inventoryService.getDashboardStats(),
-          inventoryService.getRecentReserves(0, 5)
+          inventoryService.getRecentReserves(activityPage, 5, activityFilterHours)
         ]);
         
         setStats({
@@ -46,6 +58,8 @@ const Home = () => {
         
         if (reservesData && reservesData.content) {
           setRecentReserves(reservesData.content);
+          setActivityTotalPages(reservesData.totalPages || 0);
+          setActivityTotalElements(reservesData.totalElements || 0);
         }
       } else {
         // Carga para ESTUDIANTE / PROFESOR (Personal + Global)
@@ -62,12 +76,19 @@ const Home = () => {
         });
 
         setRecentReserves(activeReserves || []);
+        setActivityTotalPages(0);
+        setActivityTotalElements((activeReserves || []).length);
       }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleActivityFilterChange = (hours) => {
+    setActivityFilterHours(hours);
+    setActivityPage(0);
   };
 
   const formatDate = (dateString) => {
@@ -194,10 +215,32 @@ const Home = () => {
 
           {/* Recent Activity Section */}
           <div className="pt-20 border-t border-slate-50">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-10">
               <h3 className="text-[11px] uppercase tracking-[0.4em] text-slate-400 font-bold">
                 {isAdmin ? 'Actividad Global' : 'Mis Solicitudes Activas'}
               </h3>
+              {isAdmin && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-slate-300">
+                    {activityTotalElements} registros
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {activityFilters.map((filter) => (
+                      <button
+                        key={filter.hours}
+                        onClick={() => handleActivityFilterChange(filter.hours)}
+                        className={`px-3 py-2 border rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                          activityFilterHours === filter.hours
+                            ? 'bg-slate-900 text-white border-slate-900'
+                            : 'bg-white text-slate-500 border-slate-100 hover:text-indigo-600 hover:border-indigo-100'
+                        }`}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {!isAdmin && (
                 <button 
                   onClick={() => navigate('/inventory')}
@@ -231,8 +274,9 @@ const Home = () => {
                         </p>
                         <div className="flex items-center space-x-3 mt-1">
                           <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${
-                            reserve.status === 'PENDIENTE' ? 'bg-amber-50 text-amber-600' :
+                            reserve.status === 'SUPERVISION' ? 'bg-amber-50 text-amber-600' :
                             reserve.status === 'CONFIRMADA' ? 'bg-emerald-50 text-emerald-600' :
+                            reserve.status === 'CANCELADA' ? 'bg-red-50 text-red-600' :
                             'bg-slate-100 text-slate-500'
                           }`}>
                             {reserve.status}
@@ -246,6 +290,29 @@ const Home = () => {
                     <div className="w-2 h-2 bg-slate-100 rounded-full group-hover:bg-indigo-600 transition-colors"></div>
                   </div>
                 ))}
+                {isAdmin && activityTotalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6">
+                    <button
+                      disabled={activityPage === 0 || loading}
+                      onClick={() => setActivityPage((page) => Math.max(page - 1, 0))}
+                      className="px-5 py-2 border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      Anterior
+                    </button>
+
+                    <span className="text-[10px] text-slate-400 uppercase tracking-widest text-center">
+                      Pagina <span className="font-bold text-slate-900">{activityPage + 1}</span> de <span className="font-bold text-slate-900">{activityTotalPages}</span>
+                    </span>
+
+                    <button
+                      disabled={activityPage >= activityTotalPages - 1 || loading}
+                      onClick={() => setActivityPage((page) => Math.min(page + 1, activityTotalPages - 1))}
+                      className="px-5 py-2 border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

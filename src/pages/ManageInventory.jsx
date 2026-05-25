@@ -457,7 +457,7 @@ const ManageInventory = () => {
                         type="file" 
                         ref={fileInputRef} 
                         onChange={(e) => handleFileChange(e, 'images')}
-                        accept="image/*"
+                        accept="image/*,.svg"
                         multiple
                         className="hidden"
                       />
